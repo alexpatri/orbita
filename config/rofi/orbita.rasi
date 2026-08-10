@@ -125,5 +125,5 @@ textbox-atalhos {
     border-color:     rgba(255, 255, 255, 6%);
     font:             "JetBrains Mono 9";
     text-color:       @texto-meta;
-    str:              "↑↓ navegar      tab modos      enter abrir      esc fechar";
+    str:              "↑↓ navegar      enter abrir      esc fechar";
 }
