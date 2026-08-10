@@ -1,0 +1,80 @@
+;; ── painel Sistema ─────────────────────────────────────────────────────
+;; top 62 · left 12 · width 640. Spec nas linhas 172–219 do protótipo.
+
+;; :run-while sys_open — nada disso roda com o painel fechado. Sem isso o
+;; nvidia-smi ficaria batendo no dGPU a cada 2s para sempre.
+(deflisten sysinfo
+  :initial `{"uptime":"—","cpu":{"nome":"—","pct":0,"freq":"0,0 GHz","temp":0},"mem":{"pct":0,"usada":"0,0","total":"0","swap":"0,0"},"gpu":{"nome":"—","pct":0,"usada":"0,0","total":"0","temp":0},"disco":{"nome":"—","pct":0,"usado":"0","total":"0","le":"0,0","esc":"0,0"}}`
+  :run-while sys_open
+  "~/.config/eww-orbita/scripts/system.sh")
+
+(defpoll procs :interval "3s"
+  :initial "[]"
+  :run-while sys_open
+  "~/.config/eww-orbita/scripts/procs.sh")
+
+;; Coluna de largura fixa. O min-width NÃO pode ir no label: o eww não expõe
+;; `xalign`, e um GtkLabel mais largo que seu texto centraliza o conteúdo — as
+;; colunas saíam centralizadas em vez de alinhadas à esquerda. A largura vai no
+;; box e o label, com halign start, encosta na esquerda dele.
+(defwidget tcol [cls text]
+  (box :class {cls} :space-evenly false :halign "start"
+    (label :text text :halign "start")))
+
+;; Linha da tabela. A primeira (maior CPU) vem destacada, como no protótipo —
+;; o `for` do yuck não dá índice, então a comparação é com o topo da lista.
+(defwidget proc-row [p sel]
+  (box :class "table-row ${sel ? 'table-row-sel' : ''}" :space-evenly false
+    (tcol :cls "col-pid" :text {p.pid})
+    (tcol :cls "col-usr" :text {p.usr})
+    (tcol :cls "col-mem" :text {p.mem})
+    (tcol :cls "col-cpu" :text {p.cpu})
+    (label :text {p.cmd} :halign "start" :truncate true :limit-width 34)))
+
+(defwidget sistema []
+  (box :class "panel" :orientation "v" :space-evenly false
+    (panel-head :icon ic_monitoring :title "SISTEMA"
+                :meta "uptime ${sysinfo.uptime}")
+
+    ;; grid 2×2, gap 10, padding lateral 20
+    (box :orientation "v" :space-evenly false :spacing 10
+         :style "padding: 0 20px;"
+      (box :space-evenly true :spacing 10
+        (card :label "CPU · ${sysinfo.cpu.nome}" :value "${sysinfo.cpu.pct}%"
+              :pct {sysinfo.cpu.pct} :meter "meter-accent"
+              :foot-left {sysinfo.cpu.freq} :foot-right "${sysinfo.cpu.temp} °C")
+        (card :label "MEMÓRIA" :value "${sysinfo.mem.pct}%"
+              :pct {sysinfo.mem.pct} :meter "meter-accent"
+              :foot-left "${sysinfo.mem.usada} / ${sysinfo.mem.total} GB"
+              :foot-right "swap ${sysinfo.mem.swap} GB"))
+      (box :space-evenly true :spacing 10
+        (card :label "GPU · ${sysinfo.gpu.nome}" :value "${sysinfo.gpu.pct}%"
+              :pct {sysinfo.gpu.pct} :meter "meter-gpu"
+              :foot-left "${sysinfo.gpu.usada} / ${sysinfo.gpu.total} GB"
+              :foot-right "${sysinfo.gpu.temp} °C")
+        (card :label "DISCO · ${sysinfo.disco.nome}" :value "${sysinfo.disco.pct}%"
+              :pct {sysinfo.disco.pct} :meter "meter-warn"
+              :foot-left "${sysinfo.disco.usado} / ${sysinfo.disco.total} GB"
+              :foot-right "↓${sysinfo.disco.le} ↑${sysinfo.disco.esc} MB/s")))
+
+    ;; tabela de processos
+    (box :class "table" :orientation "v" :space-evenly false
+      (box :class "table-head" :space-evenly false
+        (label :text "PROCESSOS" :halign "start" :hexpand true))
+      (box :class "table-cols" :space-evenly false
+        (tcol :cls "col-pid" :text "PID")
+        (tcol :cls "col-usr" :text "USR")
+        (tcol :cls "col-mem" :text "MEM")
+        (tcol :cls "col-cpu" :text "CPU")
+        (label :text "COMANDO" :halign "start"))
+      (box :orientation "v" :space-evenly false
+        (for p in procs
+          (proc-row :p p :sel {p.pid == procs[0].pid}))))))
+
+(defwindow panel-sys
+  :monitor 0
+  :geometry (geometry :x "12px" :y "62px" :width "640px" :anchor "top left")
+  :stacking "fg"
+  :windowtype "dock"
+  :exclusive false
+  (sistema))

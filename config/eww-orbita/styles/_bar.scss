@@ -1,0 +1,169 @@
+// ═════════════════════════════════════════════════════════════════════
+//  Barra — geometria e estados.
+//
+//  GTK3 não tem box-sizing: padding e borda SOMAM ao min-width/min-height.
+//  Por isso todo alvo de tamanho aqui é escrito como (total − borda − padding).
+//  Ex.: chip de 28px de altura com borda 1px  ->  min-height: 26px.
+//
+//  Todo chip carrega `border: 1px solid transparent` mesmo inativo. No
+//  protótipo HTML só o chip aberto tem borda, o que faria a barra saltar 2px
+//  a cada clique. Desvio consciente, a favor da estabilidade.
+// ═════════════════════════════════════════════════════════════════════
+
+// A janela é transparente; o vidro fosco é do picom (blur dual_kawase).
+window {
+  background-color: transparent;
+}
+
+.bar {
+  min-height: 40px;                 // 42 − 1 − 1 de borda
+  padding: 0 10px;
+  border: 1px solid $bar-border;
+  border-radius: $r-bar;
+  background-color: $bar-bg;
+
+  font-family: $mono;
+  font-size: $fs-bar;
+  font-weight: 400;
+  color: $fg;
+}
+
+// ── ícones ───────────────────────────────────────────────────────────
+.icon {
+  font-family: $icons;
+  font-size: $fs-icon;
+  font-weight: 400;
+}
+.i-16     { font-size: $fs-icon16; }
+.i-accent { color: $accent; }
+.i-warn   { color: $warn; }
+.i-ok     { color: $ok; }
+.i-on     { color: $fg-3; }
+.i-off    { color: $fg-disabled; }
+
+// Larguras fixas dos valores numéricos. JetBrains Mono a 12.5px avança ~8px
+// por caractere (medido na barra); a largura reservada é ícone + spacing 6 +
+// o maior texto possível. Mantém a barra imóvel e as âncoras dos painéis
+// estáveis, já que elas são medidas a partir das bordas dos chips.
+.w-pct   { min-width: 53px; }   // "100%"    -> 15 + 6 + 4x8
+.w-mem   { min-width: 77px; }   // "12,7 GB" -> 15 + 6 + 7x8
+.w-temp  { min-width: 53px; }   // "100\B0"   -> 15 + 6 + 4x8
+.w-pct16 { min-width: 54px; }   // idem, com ícone de 16px
+
+// ── chip base ────────────────────────────────────────────────────────
+.chip {
+  min-height: 26px;                 // 28 − 2 de borda
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: $r-chip;
+  background-color: $surface;
+  color: $fg;
+}
+
+// Módulo com painel aberto.
+.chip-open {
+  background-color: $accent-open-bg;
+  border-color: $accent-open-brd;
+  color: $accent-open-fg;
+
+  .i-accent { color: $accent-light; }   // o ícone de temperatura, .i-warn, fica âmbar
+}
+
+// ── workspaces ───────────────────────────────────────────────────────
+.ws {
+  min-width: 28px;                  // 30 − 2 de borda
+  min-height: 24px;                 // 26 − 2 de borda
+  border: 1px solid transparent;
+  border-radius: $r-chip;
+  font-size: $fs-ws;
+}
+.ws-active {
+  background-color: $ws-active-bg;
+  border-color: $ws-active-brd;
+  color: $ws-active-fg;
+  font-weight: 700;
+}
+.ws-occupied {
+  background-color: $ws-occupied-bg;
+  color: $ws-occupied-fg;
+}
+.ws-empty {
+  color: $ws-empty-fg;
+}
+.ws-urgent {
+  background-color: $power-bg;
+  border-color: $power-brd;
+  color: $power-fg;
+  font-weight: 700;
+}
+
+.divider {
+  min-width: 1px;
+  min-height: 18px;
+  background-color: $divider;
+}
+
+// ── chips específicos ────────────────────────────────────────────────
+.chip-net {
+  color: $fg-2;
+}
+.chip-media {
+  padding: 0 10px;
+  color: $fg-2;
+}
+.chip-media.media-idle {
+  color: $fg-disabled;
+
+  .i-accent { color: $fg-disabled; }
+}
+
+.chip-tray {
+  padding: 0 10px;
+  background-color: $surface-tray;
+  color: $fg-3;
+}
+
+.chip-audio {
+  padding: 0 10px;
+}
+
+// O padding direito é 6px em vez de 12px para que a caixa de conteúdo (e com
+// ela o overlay) alcance perto da borda, onde o ponto âmbar precisa ficar. Os
+// 6px que faltam voltam como margem no texto, então nada se desloca: o texto
+// continua a 13px da borda externa, igual ao protótipo.
+.chip-clock {
+  padding: 0 6px 0 12px;
+}
+.clock-text {
+  margin-right: 6px;
+}
+.clock-time {
+  color: $accent-lighter;
+}
+.chip-clock.chip-open .clock-time {
+  color: $accent-light;
+}
+
+// Ponto 6×6 de não lidas, no canto superior direito do relógio.
+// O protótipo usa top 5 / right 6 absolutos em relação à BORDA do chip. O
+// overlay do GTK ancora na caixa de conteúdo, nunca fora dela — margem
+// negativa é recortada. O alcance vem do padding assimétrico em .chip-clock.
+.unread-dot {
+  min-width: 6px;
+  min-height: 6px;
+  border-radius: 3px;
+  background-color: $warn;
+  margin-top: 4px;
+}
+
+// ── power ────────────────────────────────────────────────────────────
+.power {
+  min-width: 26px;                  // 28 − 2 de borda
+  min-height: 26px;                 // 28 − 2 de borda
+  border: 1px solid $power-brd;
+  border-radius: $r-chip;
+  background-color: $power-bg;
+  color: $power-fg;
+
+  .icon { color: $power-fg; }
+}

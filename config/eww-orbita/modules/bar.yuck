@@ -1,0 +1,192 @@
+;; ── barra flutuante ────────────────────────────────────────────────────
+;; Altura 42, padding 0 10 e raio 8 vêm do protótipo (Rice bspwm.dc.html,
+;; linhas 38–76). As MARGENS não: o handoff pede 20 nas laterais e 14 no topo,
+;; mas o bspwm real usa window_gap 12, então a barra ficava 8px mais estreita
+;; que as janelas de cada lado. Margens uniformizadas em 12 para encostar nas
+;; mesmas bordas — desvio deliberado do handoff, decidido olhando a tela.
+
+;; Caminho do binário: o daemon executa os onclick via `sh -c`, então $HOME
+;; expande. ~/.local/bin não está garantido no PATH do daemon.
+(defvar EWW "$HOME/.local/bin/eww -c $HOME/.config/eww-orbita")
+
+;; ── estado dos painéis ─────────────────────────────────────────────────
+;; Por ora essas variáveis só acionam o estado visual "aberto" do chip.
+;; Nomes com underscore de propósito: em `${sys-open ? ...}` o yuck lê o
+;; hífen como subtração, porque `sys` e `net` existem como variáveis.
+;; Na etapa dos painéis elas passam a abrir/fechar as janelas eww, sem que
+;; nada aqui precise mudar.
+(defvar sys_open false)
+(defvar net_open false)
+(defvar media_open false)
+(defvar audio_open false)
+(defvar cal_open false)
+
+;; ── fontes de dados ────────────────────────────────────────────────────
+(deflisten ws
+  :initial "[]"
+  "~/.config/eww-orbita/scripts/ws.sh")
+
+(deflisten sys
+  :initial `{"cpu":0,"mem":"0,0 GB","temp":0}`
+  "~/.config/eww-orbita/scripts/sysinfo.sh")
+
+(deflisten net
+  :initial `{"icon":"","label":"…","down":"—","up":"—","up_ok":false}`
+  "~/.config/eww-orbita/scripts/net.sh")
+
+(deflisten media
+  :initial `{"active":false,"status":"Stopped","text":"nada tocando"}`
+  "~/.config/eww-orbita/scripts/media.sh")
+
+(deflisten audio
+  :initial `{"pct":0,"muted":false,"icon":""}`
+  "~/.config/eww-orbita/scripts/audio.sh")
+
+(defpoll bri :interval "1s"
+  :initial `{"pct":0,"icon":""}`
+  "~/.config/eww-orbita/scripts/brightness.sh")
+
+(defpoll bat :interval "10s"
+  :initial `{"pct":0,"status":"Unknown","plugged":false,"icon":""}`
+  "~/.config/eww-orbita/scripts/battery.sh")
+
+(defpoll clock :interval "20s"
+  :initial `{"date":"—","time":"--:--"}`
+  "~/.config/eww-orbita/scripts/clock.sh")
+
+(defpoll tray :interval "5s"
+  :initial `{"bt":false,"bt_icon":"","vpn":false}`
+  "~/.config/eww-orbita/scripts/tray.sh")
+
+;; Ponto âmbar do relógio: notificações ainda não vistas, contra o histórico
+;; persistido do dunst e o mesmo marcador do cartão de Notificações. Abrir o
+;; painel zera o marcador e apaga o ponto, como o design pede.
+(defpoll unread :interval "2s" :initial "0"
+  "~/.config/eww-orbita/scripts/unread.sh")
+
+;; ── auxiliares ─────────────────────────────────────────────────────────
+
+;; Ícone + valor, com gap 6 — o par que se repete em quase todos os chips.
+;;
+;; `wclass` reserva largura fixa (ver _bar.scss). Sem isso o chip encolhe e
+;; cresce quando o número muda de dígitos (CPU 9%→100%), a barra treme e a
+;; âncora do painel de Rede, que é medida a partir da borda do chip, deriva.
+;; A largura vai no BOX e o label fica com halign start: no label, o GTK
+;; centralizaria o texto dentro do min-width.
+(defwidget metric [icon text iclass wclass]
+  (box :class "metric ${wclass}" :space-evenly false :spacing 6 :valign "center"
+    (label :class "icon ${iclass}" :text icon)
+    (label :text text :halign "start")))
+
+;; ── módulos ────────────────────────────────────────────────────────────
+
+;; 1 · Workspaces — 6 quadrados 30×26, gap 5.
+(defwidget m-workspaces []
+  (eventbox :valign "center" :onscroll "test {} = up && bspc desktop -f prev.local || bspc desktop -f next.local"
+    (box :class "workspaces" :space-evenly false :spacing 5 :valign "center"
+      (for w in ws
+        (button :valign "center" :class "ws ${w.urgent ? 'ws-urgent' : w.focused ? 'ws-active' : w.occupied ? 'ws-occupied' : 'ws-empty'}"
+                :onclick "bspc desktop -f ${w.name}"
+          (label :text {w.name}))))))
+
+;; 2 · Divisor 1×18.
+(defwidget m-divider []
+  (box :class "divider" :valign "center"))
+
+;; 3 · Chip sistema — CPU · RAM usada · temperatura do pacote.
+(defwidget m-system []
+  (button :class "chip chip-system ${sys_open ? 'chip-open' : ''}" :valign "center"
+          :onclick "~/.config/eww-orbita/scripts/panel.sh toggle sys_open panel-sys"
+    (box :space-evenly false :spacing 16 :valign "center"
+      (metric :icon ic_memory             :iclass "i-accent" :wclass "w-pct"  :text "${sys.cpu}%")
+      (metric :icon ic_database           :iclass "i-accent" :wclass "w-mem"  :text {sys.mem})
+      (metric :icon ic_device_thermostat  :iclass "i-warn"   :wclass "w-temp" :text "${sys.temp}°"))))
+
+;; 4 · Chip rede — só o ícone e o nome da interface/SSID.
+;; O throughput e o chevron do protótipo saíram por decisão de uso.
+;; O net.sh continua emitindo `down`/`up`: o painel de Rede vai querer.
+(defwidget m-net []
+  (button :class "chip chip-net ${net_open ? 'chip-open' : ''}" :valign "center"
+          :onclick "~/.config/eww-orbita/scripts/panel.sh toggle net_open panel-net"
+    (metric :icon {net.icon} :iclass "i-accent" :wclass "" :text {net.label})))
+
+;; 5 · Mídia (centro) — MPRIS. max-width 320px vira limite em caracteres,
+;;     porque GTK3 não tem max-width.
+(defwidget m-media []
+  (button :class "chip chip-media ${media_open ? 'chip-open' : ''} ${media.active ? '' : 'media-idle'}" :valign "center"
+          :onclick "~/.config/eww-orbita/scripts/panel.sh toggle media_open panel-player"
+    (box :space-evenly false :spacing 8 :valign "center"
+      (label :class "icon i-accent" :text {media.active ? ic_graphic_eq : ic_music_off})
+      (label :truncate true :limit-width 38 :text {media.text}))))
+
+;; 6 · Tray — bluetooth · vpn.
+;; O cloud_sync do protótipo saiu: não havia fonte de dado real para ele.
+(defwidget m-tray []
+  (box :class "chip chip-tray" :space-evenly false :spacing 12 :valign "center" :vexpand false
+    (label :class "icon i-16 ${tray.bt  ? 'i-on' : 'i-off'}" :text {tray.bt_icon})
+    (label :class "icon i-16 ${tray.vpn ? 'i-on' : 'i-off'}" :text ic_shield)))
+
+;; 7 · Chip volume + brilho + bateria. Sem chevron, por decisão de uso.
+;; O brilho não está no protótipo, que só o traz como slider no painel Settings.
+;; Ordem: volume e brilho juntos por serem os dois níveis ajustáveis (e vindos
+;; do mesmo painel); a bateria fica no fim, como estado, ao lado do relógio.
+;; Brilho usa o mesmo acento do volume — não há token próprio no handoff.
+;; Sem scroll de volume também: chegou a funcionar (o chip precisava deixar de
+;; ser `button`, porque o GtkButton engole o evento antes de qualquer eventbox
+;; interno), mas o comportamento foi descartado.
+(defwidget m-audio []
+  (button :class "chip chip-audio ${audio_open ? 'chip-open' : ''}" :valign "center"
+          :onclick "~/.config/eww-orbita/scripts/panel.sh toggle audio_open panel-settings"
+    (box :space-evenly false :spacing 12 :valign "center"
+      (metric :icon {audio.icon} :iclass "i-accent i-16" :wclass "w-pct16" :text "${audio.pct}%")
+      (metric :icon {bri.icon}   :iclass "i-accent i-16" :wclass "w-pct16" :text "${bri.pct}%")
+      (metric :icon {bat.icon}   :iclass "i-ok i-16"     :wclass "w-pct16" :text "${bat.pct}%"))))
+
+;; 8 · Relógio + ponto âmbar de não lidas.
+;;     O ponto some quando o painel de notificações é aberto.
+(defwidget m-clock []
+  (button :class "chip chip-clock ${cal_open ? 'chip-open' : ''}" :valign "center"
+          :onclick "~/.config/eww-orbita/scripts/notif-marcar.sh; ~/.config/eww-orbita/scripts/cal-nav.sh reset; ~/.config/eww-orbita/scripts/panel.sh toggle cal_open panel-cal,panel-notif"
+    (overlay
+      (box :class "clock-text" :space-evenly false :spacing 8 :valign "center"
+        (label :text {clock.date})
+        (label :class "clock-time" :text {clock.time}))
+      (box :class "unread-dot" :halign "end" :valign "start"
+           :visible {!cal_open && unread > 0}))))
+
+;; 9 · Power — 28×28.
+(defwidget m-power []
+  (button :class "power" :valign "center" :onclick "$HOME/.local/bin/power"
+    (label :class "icon i-16" :text ic_power_settings_new)))
+
+;; ── montagem ───────────────────────────────────────────────────────────
+;; O centerbox É o .bar: envolvê-lo num box com `space-evenly false` fazia o
+;; filho receber só a largura natural, e a seção direita não chegava na borda.
+(defwidget bar-content []
+  (centerbox :class "bar" :orientation "h"
+    (box :halign "start" :valign "center" :space-evenly false :spacing 14
+      (m-workspaces)
+      (m-divider)
+      (m-system)
+      (m-net))
+    (box :halign "center" :valign "center" :space-evenly false
+      (m-media))
+    (box :halign "end" :valign "center" :space-evenly false :spacing 8
+      (m-tray)
+      (m-audio)
+      (m-clock)
+      (m-power))))
+
+;; :exclusive false de propósito — quem reserva o espaço é o top_padding do
+;; bspwm. Os dois juntos reservariam em dobro.
+;;
+;; top_padding = 54, e NÃO 68 como diz o handoff. O bspwm SOMA o window_gap ao
+;; top_padding, então o 68 do README (14+42+12) rendia um vão de 24px em vez de
+;; 12. A conta certa é: topo(12) + altura(42) + vão(12) − window_gap(12) = 54.
+(defwindow bar
+  :monitor 0
+  :geometry (geometry :x "0px" :y "12px" :width "1896px" :height "42px" :anchor "top center")
+  :stacking "fg"
+  :windowtype "dock"
+  :exclusive false
+  (bar-content))

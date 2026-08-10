@@ -1,0 +1,78 @@
+;; ── painel Settings ────────────────────────────────────────────────────
+;; top 62 · right 230 · width 420. Spec nas linhas 416–467 do protótipo.
+;; O right 230 alinha a borda direita do painel com a do chip de volume, que
+;; medi em x=1690 — não é o right 118 do handoff, cujas larguras de chip não
+;; são as nossas (tiramos o chevron, entrou o brilho).
+
+(defpoll settings :interval "3s"
+  :initial `{"bt":{"on":false,"txt":"—"},"vpn":{"on":false,"txt":"—"},"aviao":{"on":false,"txt":"—"},"energia":{"on":true,"txt":"—","perfil":""},"dnd":{"on":false,"txt":"—"},"vol":0,"mic":0,"bri":0,"saida":{"nome":"—","id":""}}`
+  :run-while audio_open
+  "~/.config/eww-orbita/scripts/settings.sh")
+
+(defvar ACAO "~/.config/eww-orbita/scripts/settings-action.sh")
+
+;; Botão do grid: ícone + título + estado. `iclass` existe só para o Energia,
+;; que no protótipo tem o ícone verde mesmo quando os outros estão cinza.
+(defwidget sw-btn [icon titulo estado on alvo ?iclass]
+  (eventbox :onclick "${ACAO} ${alvo}" :cursor "pointer" :hexpand true
+    (box :class "swbtn ${on ? 'swbtn-on' : ''}" :space-evenly false :spacing 11
+      (label :class "swbtn-icon ${iclass ?: ''}" :text icon :valign "center")
+      (box :orientation "v" :space-evenly false :valign "center" :hexpand true
+        (label :class "swbtn-titulo" :text titulo :halign "start")
+        (label :class "swbtn-estado" :text estado :halign "start")))))
+
+;; Linha de slider: ícone + escala + valor com largura fixa à direita.
+;; O valor tem min-width para o slider não encolher quando o número muda de
+;; dígitos — mesma razão das larguras fixas no chip de sistema da barra.
+(defwidget slider [icon valor alvo mclass]
+  (box :class "sl-linha" :space-evenly false :spacing 14 :valign "center"
+    (label :class "sl-icon" :text icon :valign "center")
+    (scale :class "sl ${mclass}" :value valor :min 0 :max 101
+           :onchange "${ACAO} ${alvo} {}" :hexpand true :valign "center")
+    (label :class "sl-valor" :text "${valor}%" :valign "center")))
+
+(defwidget settings []
+  (box :class "panel set-panel" :orientation "v" :space-evenly false
+
+    ;; ── grid 2 colunas ────────────────────────────────────────────────
+    ;; GTK3 não tem grid-template-columns: cada linha é um box com
+    ;; space-evenly, e a terceira leva um box vazio para o botão ficar com
+    ;; metade da largura, como no protótipo.
+    (box :orientation "v" :space-evenly false :spacing 8
+      (box :space-evenly true :spacing 8
+        (sw-btn :icon ic_bluetooth :titulo "Bluetooth" :alvo "bt"
+                :estado {settings.bt.txt}  :on {settings.bt.on})
+        (sw-btn :icon ic_vpn_lock  :titulo "VPN" :alvo "vpn"
+                :estado {settings.vpn.txt} :on {settings.vpn.on}))
+      (box :space-evenly true :spacing 8
+        (sw-btn :icon ic_airplanemode_active :titulo "Modo avião" :alvo "aviao"
+                :estado {settings.aviao.txt} :on {settings.aviao.on})
+        (sw-btn :icon ic_eco :titulo "Energia" :alvo "energia" :iclass "i-ok"
+                :estado {settings.energia.txt} :on {settings.energia.on}))
+      (box :space-evenly true :spacing 8
+        (sw-btn :icon ic_notifications_paused :titulo "Não perturbe" :alvo "dnd"
+                :estado {settings.dnd.txt} :on {settings.dnd.on})
+        (box)))
+
+    ;; ── sliders ───────────────────────────────────────────────────────
+    (box :class "set-sliders" :orientation "v" :space-evenly false
+      (slider :icon ic_volume_up :valor {settings.vol} :alvo "vol" :mclass "sl-accent")
+      ;; Linha da saída de áudio, recuada 33px como no protótipo. Só informa
+      ;; qual é a saída atual — o `trocar saída ›` do mockup foi removido.
+      (box :class "set-saida" :space-evenly false
+        (label :text {settings.saida.nome} :halign "start" :hexpand true
+               :truncate true :limit-width 40))
+      (slider :icon ic_mic          :valor {settings.mic} :alvo "mic" :mclass "sl-mic")
+      (slider :icon ic_brightness_6 :valor {settings.bri} :alvo "bri" :mclass "sl-accent"))))
+
+(defwindow panel-settings
+  :monitor 0
+  ;; Ancorado à ESQUERDA com x absoluto, e não com `anchor "top right"`: o eww
+  ;; soma o offset em vez de subtrair na âncora direita, e a janela vazava
+  ;; 230px para fora da tela. 1270 = 1920 − 230 (margem) − 420 (largura), o que
+  ;; põe a borda direita em 1690, alinhada com a do chip de volume.
+  :geometry (geometry :x "1270px" :y "62px" :width "420px" :anchor "top left")
+  :stacking "fg"
+  :windowtype "dock"
+  :exclusive false
+  (settings))

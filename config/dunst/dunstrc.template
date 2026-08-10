@@ -1,0 +1,102 @@
+# ═══════════════════════════════════════════════════════════════════════
+#  Toasts do rice "Órbita" — §2 do handoff.
+#
+#  ESTE e o arquivo a editar, e nao o dunstrc: o dunstrc e GERADO por
+#  scripts/colors.sh a partir daqui, e qualquer edicao direta nele some na
+#  proxima execucao.
+#
+#  As cores deixaram de ser placeholders do pywal ({WAL_BG} etc.): a paleta do
+#  Orbita e fixa por design, entao deriva-la do papel de parede nao faz
+#  sentido. O colors.sh continua funcionando — o sed dele so nao encontra mais
+#  nada para substituir e o arquivo e copiado como esta.
+# ═══════════════════════════════════════════════════════════════════════
+
+[global]
+    monitor = 0
+    follow = mouse
+
+    # Geometria recalculada para a NOSSA barra, e nao a do handoff:
+    # offset vertical 66 = 12 (topo da barra) + 42 (altura) + 12 (vao), e
+    # lateral 12 para encostar na mesma borda das janelas. O handoff dizia
+    # 20x68, contas feitas sobre uma barra em top 14 / margem 20.
+    origin = top-right
+    offset = (12, 66)
+    width = (380, 380)
+    height = (0, 300)
+    # gap_size 0, e nao os 10px do design, por decisao tomada olhando a tela:
+    # o dunst desenha TODOS os toasts numa janela X11 so, entao um vao
+    # transparente entre eles seria borrado pelo picom junto com o resto da
+    # janela — medido, o desvio de cor na faixa caia de 36 para 10 com o blur
+    # ligado. Encostados, com uma linha de 1px separando, nao ha regiao
+    # transparente e o vidro fosco continua valendo.
+    gap_size = 0
+    notification_limit = 5
+
+    # Cantos e moldura do design. A cor de fundo carrega o alfa no proprio
+    # hex (d1 = 0.82 x 255), por isso `transparency` fica em 0 — as duas
+    # coisas se somariam.
+    corner_radius = 10
+    frame_width = 1
+    transparency = 0
+    background = "#090e12d1"
+    foreground = "#e6f4f6"
+    frame_color = "#a0d6de29"
+    separator_height = 1
+    separator_color = "#ffffff14"
+
+    # Espacamentos: padding 14x16 e gap de 12 entre icone e texto.
+    padding = 14
+    horizontal_padding = 16
+    text_icon_padding = 12
+
+    icon_position = left
+    min_icon_size = 20
+    max_icon_size = 20
+    enable_recursive_icon_lookup = true
+
+    # Uma fonte so para todo o toast — o tamanho por linha vem da marcacao
+    # Pango no `format`. O `size` do Pango e em milesimos de ponto, e ponto =
+    # px x 0.75: titulo 13.5px -> 10125, corpo 12.5px -> 9375.
+    font = IBM Plex Sans 10
+    markup = full
+    format = "<span size='10125' weight='500' foreground='#e6f4f6'>%s</span>\n<span size='9375' foreground='#8b9ea4'>%b</span>"
+
+    alignment = left
+    vertical_alignment = center
+    ellipsize = end
+    ignore_newline = no
+    stack_duplicates = true
+    hide_duplicate_count = false
+    show_indicators = no
+
+    # O "+2" da pilula do protótipo. O dunst mostra isso como um toast extra
+    # ("N more"), e nao como pilula — a pilula com "limpar tudo" nao tem
+    # equivalente aqui; ela existe no painel de Notificacoes.
+    indicate_hidden = yes
+
+    progress_bar = true
+    progress_bar_height = 6
+    progress_bar_frame_width = 0
+    progress_bar_min_width = 150
+    progress_bar_max_width = 320
+
+    mouse_left_click = close_current
+    mouse_middle_click = do_action
+    mouse_right_click = close_all
+
+[urgency_low]
+    timeout = 3
+    foreground = "#a8bbc0"
+    frame_color = "#a0d6de1f"
+
+[urgency_normal]
+    timeout = 5
+    frame_color = "#a0d6de29"
+
+# Toast de alerta: moldura ambar, rgba(230,185,138,.28) -> 47 de alfa.
+# O icone do design tambem e ambar, mas o dunst nao recolore icone: ele
+# desenha a imagem que a aplicacao mandou.
+[urgency_critical]
+    timeout = 0
+    frame_color = "#e6b98a47"
+    foreground = "#e6f4f6"

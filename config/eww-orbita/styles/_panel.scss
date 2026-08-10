@@ -1,0 +1,487 @@
+// ═════════════════════════════════════════════════════════════════════
+//  Moldura compartilhada dos painéis.
+//
+//  Valores das linhas 172–219 do protótipo. Valem as mesmas armadilhas do
+//  GTK3 anotadas no _bar.scss: sem `gap` (usar :spacing), sem `box-sizing`
+//  (padding e borda somam), sem `max-width`, e valign/halign explícitos.
+// ═════════════════════════════════════════════════════════════════════
+
+// ── janela ───────────────────────────────────────────────────────────
+.panel {
+  border-radius: $r-panel;
+  background-color: $panel-bg;
+  border: 1px solid $panel-border;
+  color: $fg;
+  font-family: $mono;
+}
+
+// Retângulo transparente que captura o clique-fora. Cobre a tela abaixo
+// da barra. O alfa mínimo em vez de `transparent` é de propósito: garante
+// que o GTK trate a área como região de entrada.
+.catcher {
+  background-color: rgba(0, 0, 0, 0.002);
+}
+
+// ── cabeçalho ────────────────────────────────────────────────────────
+.panel-head {
+  padding: 16px 20px 12px;
+}
+// GTK3 nao tem text-transform: o caixa-alta do design vem escrito literal no
+// yuck ("SISTEMA"), nao por CSS. letter-spacing existe, mas so em px — o .14em
+// do protótipo sobre 13px da 1.8px.
+.panel-title {
+  font-family: $mono;
+  font-size: 13px;
+  letter-spacing: 1.8px;
+  color: $accent;
+}
+.panel-title-icon {
+  font-family: $icons;
+  font-size: 17px;
+  color: $accent;
+}
+.panel-head-meta {
+  font-family: $mono;
+  font-size: 12px;
+  color: $fg-weak;
+}
+
+// ── cartão ───────────────────────────────────────────────────────────
+.card {
+  padding: 14px 16px;
+  border-radius: 8px;
+  background-color: $surface-dim;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.card-label {
+  font-family: $mono;
+  font-size: 12px;
+  color: $fg-3;
+}
+.card-value {
+  font-family: $mono;
+  font-size: 20px;
+  color: #e6f4f6;
+}
+.card-foot {
+  font-family: $mono;
+  font-size: 11.5px;
+  color: $fg-weak;
+  margin-top: 8px;
+}
+
+// ── barra de progresso ───────────────────────────────────────────────
+// A trilha é o próprio widget; a cor de preenchimento vem de `progress`.
+// scale/progressbar do GTK trazem bagagem de tema, então o eww `progress`
+// com min-height e border-radius é o caminho limpo.
+.meter {
+  min-height: 5px;
+  border-radius: 2px;
+  background-color: rgba(255, 255, 255, 0.08);
+  margin-top: 10px;
+
+  trough { min-height: 5px; border-radius: 2px; background-color: transparent; }
+  progress { min-height: 5px; border-radius: 2px; }
+}
+.meter-accent progress { background-color: $accent; }
+.meter-gpu    progress { background-color: $gpu; }
+.meter-warn   progress { background-color: $warn; }
+
+// ── tabela de processos ──────────────────────────────────────────────
+.table {
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  margin: 16px 20px 20px;
+}
+.table-head {
+  padding: 10px 14px;
+  background-color: $surface;
+  font-family: $mono;
+  font-size: 11.5px;
+  letter-spacing: 1.15px;          // .1em sobre 11.5px
+  color: $fg-3;
+}
+.table-cols {
+  padding: 9px 14px 6px;
+  font-family: $mono;
+  font-size: 11.5px;
+  color: #5f7379;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.table-row {
+  padding: 7px 14px;
+  font-family: $mono;
+  font-size: 12px;
+  color: $fg-2;
+}
+.table-row-sel {
+  background-color: rgba(159, 216, 222, 0.08);
+  color: #dceff2;
+}
+.table-row-sel .col-cpu {
+  color: $accent;
+}
+
+// Colunas fixas do protótipo: 64 / 74 / 62 / 62 / resto.
+// GTK3 não tem grid-template-columns; min-width por coluna faz o mesmo.
+.col-pid { min-width: 64px; }
+.col-usr { min-width: 74px; }
+.col-mem { min-width: 62px; }
+.col-cpu { min-width: 62px; }
+
+
+// ── painel Rede ──────────────────────────────────────────────────────
+.net-head {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+.net-title {
+  font-family: $mono;
+  font-size: 12.5px;
+  letter-spacing: 1.5px;            // .12em sobre 12.5px
+  color: $accent;
+}
+
+// Interruptor 38×20: min-width/height são a caixa de conteúdo, o padding
+// de 2px soma por fora (GTK3 não tem box-sizing).
+.sw {
+  min-width: 34px;
+  min-height: 16px;
+  padding: 2px;
+  border-radius: 10px;
+}
+.sw-on  { background-color: rgba(159, 216, 222, 0.35); }
+.sw-off { background-color: rgba(255, 255, 255, 0.10); }
+.sw-thumb {
+  min-width: 16px;
+  min-height: 16px;
+  border-radius: 8px;
+  background-color: $accent-lighter;
+}
+
+.net-list { padding: 6px; }
+
+.net-vazio-msg {
+  font-family: $mono;
+  font-size: 12.5px;
+  color: #7e9096;
+}
+
+// Faixa fixa do cabo, entre o scroll e o rodapé. A borda de topo é o que
+// separa visualmente o que rola do que fica parado.
+.net-cabo {
+  padding: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.netrow {
+  padding: 11px 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;     // sempre presente, para a linha não saltar
+}
+.netrow-icon  { font-family: $icons; font-size: 19px; color: $fg-3; }
+.netrow-right { font-family: $icons; font-size: 16px; color: #65787e; }
+.netrow-title { font-family: $sans; font-size: 13.5px; color: $fg-2; }
+.netrow-meta  { font-family: $mono; font-size: 11px;  color: #65787e; margin-top: 2px; }
+
+.netrow-on {
+  background-color: $accent-soft-bg;
+  border-color: rgba(159, 216, 222, 0.22);
+
+  .netrow-icon  { color: $accent-light; font-size: 19px; }
+  .netrow-right { color: #8fbcc2; font-size: 17px; }
+  .netrow-title { color: $fg-1; }
+  .netrow-meta  { color: #8fbcc2; }
+}
+
+.net-foot {
+  padding: 11px 16px;
+  background-color: rgba(255, 255, 255, 0.03);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-family: $mono;
+  font-size: 11.5px;
+  color: #7e9096;
+}
+
+// Barra de rolagem da lista de redes, na paleta do rice. O nó do GTK é
+// `scrollbar > ... > slider`, daí o seletor descendente.
+.net-scroll {
+  scrollbar {
+    background-color: transparent;
+    border: none;
+
+    slider {
+      min-width: 5px;
+      border-radius: 3px;
+      background-color: rgba(159, 216, 222, 0.22);
+    }
+    slider:hover { background-color: rgba(159, 216, 222, 0.4); }
+  }
+}
+
+// ── painel Settings ──────────────────────────────────────────────────
+.set-panel { padding: 18px 20px; }
+
+.swbtn {
+  padding: 13px 14px;
+  border-radius: 8px;
+  background-color: $surface;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+.swbtn-icon   { font-family: $icons; font-size: 19px; color: $fg-3; }
+// Precisa dos dois seletores juntos: .i-ok sozinho tem a mesma especificidade
+// de .swbtn-icon, e como o _panel.scss é importado DEPOIS do _bar.scss, quem
+// ganhava era o cinza. O ícone do Energia é verde no protótipo.
+.swbtn-icon.i-ok   { color: $ok; }
+.swbtn-icon.i-warn { color: $warn; }
+.swbtn-titulo { font-family: $sans;  font-size: 13.5px; color: $fg-2; }
+.swbtn-estado { font-family: $mono;  font-size: 11px;   color: #65787e; }
+
+.swbtn-on {
+  background-color: $accent-soft-bg;
+  border-color: $accent-soft-brd;
+
+  .swbtn-titulo { color: $fg-1; }
+  .swbtn-estado { color: #8fbcc2; }
+}
+
+// ── sliders ──────────────────────────────────────────────────────────
+.set-sliders {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.sl-linha  { margin-top: 16px; }
+.sl-linha:first-child { margin-top: 0; }
+.sl-icon   { font-family: $icons; font-size: 19px; color: $fg-3; }
+
+// Largura fixa no valor: sem ela o slider encolhe quando o número muda de
+// dígitos (9% -> 100%), mesma razão das larguras fixas no chip de sistema.
+.sl-valor {
+  font-family: $mono;
+  font-size: 12px;
+  color: $fg-3;
+  min-width: 38px;
+}
+
+// GtkScale: `trough` é a trilha, `highlight` o preenchimento, `slider` o
+// polegar. Sem `all: unset` no reset o Adwaita desenharia o próprio.
+.sl {
+  trough {
+    min-height: 6px;
+    border-radius: 3px;
+    background-color: rgba(255, 255, 255, 0.1);
+
+    highlight { min-height: 6px; border-radius: 3px; }
+  }
+  // A margem negativa é o que impede o polegar de esticar a trilha: sem ela o
+  // GTK cresce o trough para caber os 14px do slider, e a trilha de 6px
+  // renderizava com 14. -4 = (14 − 6) / 2.
+  slider {
+    min-width: 14px;
+    min-height: 14px;
+    margin: -4px;
+    border-radius: 4px;              // raio 4, não redondo — vem do handoff
+    background-color: $accent-lighter;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  }
+}
+.sl-accent trough highlight { background-color: $accent; }
+.sl-mic    trough highlight { background-color: #6e8f95; }
+
+// Linha da saída de áudio, recuada 33px como no protótipo (ícone 19 + gap 14).
+.set-saida {
+  margin: 8px 0 0 33px;
+  font-family: $mono;
+  font-size: 11.5px;
+  color: $fg-weak;
+}
+
+// ── painel Calendário + Notificações ─────────────────────────────────
+.cal-card { padding: 18px 20px 16px; }
+
+.cal-nav  { margin-bottom: 14px; }
+.cal-seta { font-family: $icons; font-size: 18px; color: #7e9096; }
+.cal-mes  { font-family: $mono; font-size: 14px; letter-spacing: 1.4px; color: #e6f4f6; }
+.cal-ano  { font-family: $mono; font-size: 14px; letter-spacing: 1.4px; color: #7e9096; }
+
+.cal-dow {
+  font-family: $mono;
+  font-size: 11px;
+  color: #5f7379;
+  margin-bottom: 4px;
+}
+
+.cel {
+  padding: 7px 0;
+  border-radius: 6px;
+  font-family: $mono;
+  font-size: 13px;
+  color: $fg-2;
+}
+.cel-fora { color: #39464b; }
+.cel-hoje {
+  background-color: $accent;
+  color: #081214;
+  font-weight: 700;
+}
+// Ponto 4×4 dos dias com evento. Fica sempre no fluxo, só escondido nos dias
+// sem evento — se entrasse e saísse da árvore, a altura da célula pularia.
+.cel-ponto {
+  min-width: 4px;
+  min-height: 4px;
+  border-radius: 2px;
+  background-color: $warn;
+  margin-top: 2px;
+}
+
+.cal-eventos {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+// A faixa estica na altura do item (align-self:stretch no protótipo).
+.ev-faixa {
+  min-width: 3px;
+  border-radius: 2px;
+  background-color: $accent;
+}
+.ev-sistema { background-color: $warn; }
+.ev-titulo  { font-family: $sans; font-size: 13.5px; color: #dceff2; }
+.ev-quando  { font-family: $mono; font-size: 11.5px; color: $fg-weak; margin-top: 3px; }
+
+// ── notificações ─────────────────────────────────────────────────────
+.nt-head {
+  padding: 11px 20px;
+  background-color: $surface;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-family: $mono;
+  font-size: 11.5px;
+  letter-spacing: 1.15px;
+  color: $fg-3;
+}
+.nt-pausa    { font-family: $icons; font-size: 16px; color: #7e9096; }
+.nt-pausa-on { color: $accent; }
+.nt-limpar   { color: $accent; }
+
+.nt-lista { padding: 10px; }
+.nt-dia {
+  font-family: $mono;
+  font-size: 10.5px;
+  letter-spacing: 1.26px;          // .12em sobre 10.5px
+  color: #5f7379;
+  padding: 4px 8px;
+}
+
+.nt-item {
+  padding: 11px 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;   // sempre presente, para a linha não saltar
+}
+.nt-nova {
+  background-color: rgba(159, 216, 222, 0.1);
+  border-color: rgba(159, 216, 222, 0.18);
+}
+.nt-icon   { font-family: $icons; font-size: 19px; color: $fg-3; }
+.nt-titulo { font-family: $sans; font-size: 13px; color: $fg-1; }
+.nt-corpo  { font-family: $sans; font-size: 12px; color: $fg-3; }
+.nt-hora   { font-family: $mono; font-size: 10.5px; color: #5f7379; }
+
+.nt-scroll {
+  scrollbar {
+    background-color: transparent;
+    border: none;
+
+    slider {
+      min-width: 5px;
+      border-radius: 3px;
+      background-color: rgba(159, 216, 222, 0.22);
+    }
+    slider:hover { background-color: rgba(159, 216, 222, 0.4); }
+  }
+}
+
+// ── painel Player ────────────────────────────────────────────────────
+.pl-card { padding: 18px; }
+
+// Capa 132×132. Vem como background-image de um box porque o widget `image`
+// do eww não recorta nos cantos — só assim o raio de 8px vale.
+.pl-capa {
+  min-width: 132px;
+  min-height: 132px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background-size: cover;
+  background-position: center;
+}
+.pl-capa-vazia {
+  background-color: rgba(159, 216, 222, 0.06);
+}
+.pl-capa-icon {
+  font-family: $icons;
+  font-size: 38px;
+  color: rgba(159, 216, 222, 0.35);
+}
+
+.pl-titulo { font-family: $sans; font-size: 17px; color: $fg-1; }
+.pl-sub    { font-family: $mono; font-size: 12px; color: #7e9096; margin-top: 4px; }
+
+// Pílula da fonte (firefox, spotify…), no lugar do "spotify" fixo do mockup.
+.pl-fonte {
+  font-family: $mono;
+  font-size: 10.5px;
+  letter-spacing: 1.05px;
+  color: $fg-weak;
+  padding: 3px 7px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+}
+
+// Barra de progresso: trilha e preenchimento como boxes. Um `scale` traria
+// polegar e interação de arrastar, que o protótipo não tem aqui.
+.pl-barra {
+  min-height: 3px;
+  border-radius: 2px;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+.pl-preenche {
+  min-height: 3px;
+  border-radius: 2px;
+  background-color: $accent;
+}
+
+.pl-tempos {
+  font-family: $mono;
+  font-size: 11px;
+  color: $fg-weak;
+  margin-top: 6px;
+}
+
+.pl-controles { margin-top: 10px; }
+.pl-ctl {
+  font-family: $icons;
+  font-size: 20px;
+  color: $fg-3;
+}
+.pl-ctl-g   { font-size: 24px; color: $fg-2; }
+.pl-ctl-on  { color: $accent; }
+.pl-ctl-off { color: $fg-disabled; }   // recurso que o player não implementa
+
+.pl-play {
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 8px;
+  background-color: $accent;
+}
+.pl-play-icon {
+  font-family: $icons;
+  font-size: 22px;
+  color: #081214;
+}
+
+.pl-saida {
+  font-family: $mono;
+  font-size: 11px;
+  color: $fg-weak;
+}
+.pl-saida-icon { font-family: $icons; font-size: 17px; }

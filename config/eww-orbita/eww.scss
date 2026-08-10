@@ -1,0 +1,10 @@
+// Órbita — folha de estilo raiz.
+// `all: unset` zera o tema GTK herdado; sem isso o Adwaita vaza em botões,
+// eventboxes e labels.
+* {
+  all: unset;
+}
+
+@import "styles/tokens";
+@import "styles/bar";
+@import "styles/panel";

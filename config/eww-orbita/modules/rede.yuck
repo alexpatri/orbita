@@ -1,0 +1,91 @@
+;; ── painel Rede ────────────────────────────────────────────────────────
+;; top 62 · left 512 · width 400. Spec nas linhas 266–302 do protótipo.
+;; O left 512 é a borda esquerda do chip de rede, medida na barra real — não
+;; o 452 do handoff, que vinha das larguras de chip do mockup.
+
+;; O estado do rádio fica numa variável PRÓPRIA, separada da lista de redes.
+;; `nmcli radio wifi` custa 0,1s e pode ser lido de 2 em 2s; a lista exige
+;; scan e só cabe a cada 10s. Amarrar o interruptor à lista fazia ele demorar
+;; até 10s para reagir a um clique de 0,2s.
+(defpoll radio :interval "2s" :initial "disabled" :run-while net_open
+  "nmcli radio wifi")
+
+(defpoll wifi :interval "10s"
+  :initial `{"radio":false,"n":0,"redes":[],"cabo":{"nome":"—","icon":"","meta":"—","conectado":false}}`
+  :run-while net_open
+  "~/.config/eww-orbita/scripts/wifi.sh")
+
+;; Interruptor 38×20 do design. Trilha e polegar são boxes: o GtkSwitch traz
+;; todo o desenho do tema junto e não aceita esta geometria.
+(defwidget toggle [on action]
+  (eventbox :onclick action :cursor "pointer" :valign "center"
+    (box :class "sw ${on ? 'sw-on' : 'sw-off'}" :valign "center"
+      (box :class "sw-thumb" :halign {on ? "end" : "start"} :valign "center"))))
+
+;; Linha da lista. `right` é o ícone da direita — `settings` na conectada,
+;; cadeado nas seguras, vazio nas abertas e na do cabo.
+(defwidget net-row [icon title meta on right action]
+  (eventbox :onclick action :cursor "pointer"
+    (box :class "netrow ${on ? 'netrow-on' : ''}" :space-evenly false :spacing 12
+      (label :class "netrow-icon" :text icon :valign "center")
+      (box :orientation "v" :space-evenly false :hexpand true
+        (label :class "netrow-title" :text title :halign "start"
+               :truncate true :limit-width 30)
+        (label :class "netrow-meta" :text meta :halign "start"
+               :truncate true :limit-width 40))
+      (label :class "netrow-right" :text right :valign "center"))))
+
+(defwidget rede []
+  (box :class "panel" :orientation "v" :space-evenly false
+    (box :class "net-head" :space-evenly false
+      (box :space-evenly false :spacing 9 :halign "start" :hexpand true :valign "center"
+        (label :class "panel-title-icon" :text ic_wifi)
+        (label :class "net-title" :text "WI-FI"))
+      (toggle :on {radio == "enabled"}
+              :action "~/.config/eww-orbita/scripts/wifi-radio.sh ${radio == 'enabled' ? 'off' : 'on'}"))
+
+    ;; A lista rola; cabeçalho e rodapé ficam parados. `vexpand` faz o scroll
+    ;; ocupar o que sobra, e é por isso que a janela tem altura FIXA no
+    ;; defwindow: o GTK3 não tem max-height, então sem travar a altura o
+    ;; scroll cresceria para caber todas as redes e nada rolaria.
+    ;; Estado vazio: com o rádio desligado a lista não tem o que mostrar e
+    ;; sobrava um vão grande, consequência da altura fixa do painel — antes
+    ;; ele encolhia junto com a lista. `:visible false` faz o GTK não reservar
+    ;; espaço, então os dois blocos disputam a mesma área e só um aparece.
+    (box :class "net-vazio" :visible {radio != "enabled"} :vexpand true
+      (label :class "net-vazio-msg" :text "Wi-Fi desligado"
+             :halign "center" :valign "center"))
+
+    (scroll :class "net-scroll" :visible {radio == "enabled"}
+            :vscroll true :hscroll false :vexpand true
+      ;; O `for` precisa ficar dentro do próprio box: solto entre irmãos
+      ;; estáticos, o eww anexa os filhos gerados no fim do container e a
+      ;; linha do cabo subia para o topo da lista.
+      (box :class "net-list" :orientation "v" :space-evenly false :valign "start"
+        (box :orientation "v" :space-evenly false
+          (for r in {wifi.redes}
+            (net-row :icon {r.icon} :title {r.ssid} :meta {r.meta} :on {r.conectado}
+                     :right {r.conectado ? ic_settings : r.seguro ? ic_lock : ""}
+                     :action "~/.config/eww-orbita/scripts/net-connect.sh '${r.ssid}'")))))
+
+    ;; Interface cabeada FORA do scroll, fixa acima do rodapé. No protótipo ela
+    ;; é a última linha da lista; aqui, com muitas redes, ela sairia de vista —
+    ;; e nesta máquina é justamente a conexão viva.
+    (box :class "net-cabo" :orientation "v" :space-evenly false
+      (net-row :icon {wifi.cabo.icon} :title {wifi.cabo.nome} :meta {wifi.cabo.meta}
+               :on {wifi.cabo.conectado} :right "" :action ""))
+
+    ;; Rodapé só com a contagem. O `nm-connection-editor ›` do protótipo saiu:
+    ;; o binário não está instalado nesta máquina, seria um link morto.
+    (box :class "net-foot" :space-evenly false
+      (label :text "${wifi.n} redes" :halign "start" :hexpand true))))
+
+(defwindow panel-net
+  :monitor 0
+  ;; 474 = cabeçalho 50 + scroll (6 + 5x60 + 6) + cabo (6 + 60 + 6) + rodapé 40,
+  ;; tudo medido na tela. Altura fixa é o que permite o scroll funcionar.
+  :geometry (geometry :x "512px" :y "62px" :width "400px" :height "474px" :anchor "top left")
+  :stacking "fg"
+  :windowtype "dock"
+  :exclusive false
+  (rede))

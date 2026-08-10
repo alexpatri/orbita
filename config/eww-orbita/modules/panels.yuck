@@ -1,0 +1,47 @@
+;; ── moldura compartilhada dos painéis ──────────────────────────────────
+;; Os painéis são janelas eww independentes: mais de uma pode ficar aberta ao
+;; mesmo tempo, não há um "centro de controle" único.
+;;
+;; Geometria DESVIA do handoff, e de propósito: o README calcula `top 64` e
+;; margem 20 sobre uma barra em top 14 / margem 20. A nossa ficou em top 12 /
+;; margem 12, então: 12 + 42 de altura + 8 de folga = top 62.
+
+(defvar PANEL "~/.config/eww-orbita/scripts/panel.sh")
+
+;; ── widgets reaproveitados por todos os painéis ───────────────────────
+
+;; Cabeçalho: `monitoring SISTEMA` à esquerda, meta à direita.
+;; O caixa-alta vai escrito literal — GTK3 não tem text-transform.
+(defwidget panel-head [icon title meta]
+  (box :class "panel-head" :space-evenly false :valign "start"
+    (box :space-evenly false :spacing 9 :halign "start" :hexpand true :valign "center"
+      (label :class "panel-title-icon" :text icon)
+      (label :class "panel-title" :text title))
+    (label :class "panel-head-meta" :text meta :halign "end" :valign "center")))
+
+;; Cartão de métrica: rótulo + valor grande, medidor, e dois dados no rodapé.
+(defwidget card [label value pct meter foot-left foot-right]
+  (box :class "card" :orientation "v" :space-evenly false
+    (box :space-evenly false
+      (label :class "card-label" :text label :halign "start" :hexpand true)
+      (label :class "card-value" :text value :halign "end"))
+    (progress :class "meter ${meter}" :orientation "h" :value pct)
+    (box :class "card-foot" :space-evenly false
+      (label :text foot-left :halign "start" :hexpand true)
+      (label :text foot-right :halign "end"))))
+
+;; ── captura do clique-fora ────────────────────────────────────────────
+;; Cobre a tela ABAIXO da barra (y 54 = 12 do topo + 42 de altura). Se
+;; cobrisse a barra também, ficaria por cima dos chips — e daria para abrir
+;; um segundo painel sem antes fechar o primeiro.
+;;
+;; Esc não entra como atalho: o sxhkd captura no X inteiro e roubaria a tecla
+;; de todo aplicativo. Fecha por clique fora ou clique de novo no chip.
+(defwindow catcher
+  :monitor 0
+  :geometry (geometry :x "0px" :y "54px" :width "1920px" :height "1026px" :anchor "top left")
+  :stacking "fg"
+  :windowtype "dock"
+  :exclusive false
+  (eventbox :onclick "${PANEL} close-all"
+    (box :class "catcher")))

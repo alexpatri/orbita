@@ -1,0 +1,18 @@
+# Estado de runtime do eww — offset do mês, marcador de notificações lidas,
+# IDs dispensados, posição congelada do player.
+.cache/
+
+# GERADO pelo scripts/colors.sh a partir do dunstrc.template. Versionar o
+# gerado convida a editar o arquivo errado, que é justamente a armadilha que
+# o handoff alertava.
+config/dunst/dunstrc
+
+# A fonte tem 15 MB. É baixada pelo assets/fontes.sh, com a URL fixada num
+# commit — o .codepoints, esse sim, vai versionado, porque o gen-icons.sh
+# depende dele e os dois precisam ser da mesma versão.
+*.ttf
+*.otf
+
+# Backups locais
+*.bak
+*.bak-orbita

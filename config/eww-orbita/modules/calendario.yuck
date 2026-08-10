@@ -1,0 +1,123 @@
+;; ── painel Calendário + Notificações ───────────────────────────────────
+;; top 62 · right 12 · width 440. Spec nas linhas 304–370 do protótipo.
+;; São DOIS cartões independentes na mesma janela, separados por 12px — por
+;; isso a janela é transparente e cada cartão carrega o próprio `.panel`.
+
+;; O mês exibido é um offset guardado em arquivo, não numa variável da eww: o
+;; comando de um defpoll é string estática e não interpola variável. Quem mexe
+;; nele é o cal-nav.sh, que já empurra o resultado sem esperar o poll.
+(defpoll calendario :interval "60s"
+  :initial `{"mes":"—","ano":"","semanas":[],"eventos":[]}`
+  :run-while cal_open
+  "~/.config/eww-orbita/scripts/calendario.sh")
+
+(defpoll notif :interval "5s"
+  :initial `{"n":0,"pausado":false,"grupos":[]}`
+  :run-while cal_open
+  "~/.config/eww-orbita/scripts/notif.sh")
+
+;; ── cartão 1: calendário ──────────────────────────────────────────────
+(defwidget cal-celula [d]
+  (box :class "cel ${d.hoje ? 'cel-hoje' : d.fora ? 'cel-fora' : ''}"
+       :orientation "v" :space-evenly false :hexpand true
+    (label :text {d.n} :halign "center")
+    ;; ponto 4×4 nos dias com evento; invisível nos demais para não deslocar
+    ;; a altura da célula.
+    (box :class "cel-ponto" :halign "center" :visible {d.evento && !d.hoje})))
+
+(defwidget cartao-cal []
+  (box :class "panel cal-card" :orientation "v" :space-evenly false
+
+    (box :class "cal-nav" :space-evenly false
+      (eventbox :timeout "5s" :onclick "~/.config/eww-orbita/scripts/cal-nav.sh prev" :cursor "pointer"
+        (label :class "cal-seta" :text ic_chevron_left :halign "start"))
+      (box :space-evenly false :spacing 6 :halign "center" :hexpand true
+        (label :class "cal-mes" :text {calendario.mes})
+        (label :class "cal-ano" :text {calendario.ano}))
+      (eventbox :timeout "5s" :onclick "~/.config/eww-orbita/scripts/cal-nav.sh next" :cursor "pointer"
+        (label :class "cal-seta" :text ic_chevron_right :halign "end")))
+
+    (box :class "cal-dow" :space-evenly true :spacing 2
+      (label :text "D" :hexpand true) (label :text "S" :hexpand true)
+      (label :text "T" :hexpand true) (label :text "Q" :hexpand true)
+      (label :text "Q" :hexpand true) (label :text "S" :hexpand true)
+      (label :text "S" :hexpand true))
+
+    (box :orientation "v" :space-evenly false :spacing 2
+      (for semana in {calendario.semanas}
+        (box :space-evenly true :spacing 2
+          (for d in semana
+            (cal-celula :d d)))))
+
+    ;; lista de eventos: faixa vertical 3px, ciano nos meus, âmbar nos do sistema
+    (box :class "cal-eventos" :orientation "v" :space-evenly false :spacing 10
+      (for ev in {calendario.eventos}
+        (box :space-evenly false :spacing 12
+          (box :class "ev-faixa ${ev.sistema ? 'ev-sistema' : ''}")
+          (box :orientation "v" :space-evenly false :hexpand true
+            (label :class "ev-titulo" :text {ev.titulo} :halign "start"
+                   :truncate true :limit-width 42)
+            (label :class "ev-quando" :text {ev.quando} :halign "start")))))))
+
+;; ── cartão 2: notificações ────────────────────────────────────────────
+(defwidget notif-item [it]
+  (eventbox :cursor "pointer" :timeout "5s"
+            :onclick "~/.config/eww-orbita/scripts/notif-dismiss.sh ${it.id}"
+  (box :class "nt-item ${it.nova ? 'nt-nova' : ''}" :space-evenly false :spacing 11
+    (label :class "nt-icon" :text ic_notifications_paused :valign "start")
+    (box :orientation "v" :space-evenly false :hexpand true
+      (label :class "nt-titulo" :text {it.titulo} :halign "start"
+             :truncate true :limit-width 34)
+      (label :class "nt-corpo" :text {it.corpo} :halign "start"
+             :truncate true :limit-width 40))
+    (label :class "nt-hora" :text {it.hora} :valign "start"))))
+
+(defwidget cartao-notif []
+  (box :class "panel nt-card" :orientation "v" :space-evenly false
+    (box :class "nt-head" :space-evenly false
+      (label :text "NOTIFICAÇÕES · ${notif.n}" :halign "start" :hexpand true)
+      (box :space-evenly false :spacing 14 :halign "end"
+        (eventbox :timeout "5s" :onclick "dunstctl set-paused toggle" :cursor "pointer"
+          (label :class "nt-pausa ${notif.pausado ? 'nt-pausa-on' : ''}"
+                 :text ic_notifications_paused))
+        (eventbox :timeout "5s" :onclick "~/.config/eww-orbita/scripts/notif-limpar.sh" :cursor "pointer"
+          (label :class "nt-limpar" :text "limpar tudo"))))
+
+    ;; Sem scroll e sem altura fixa: o cartão acompanha a quantidade de
+    ;; notificações. Quem impede de passar da borda da tela é o teto de itens
+    ;; do notif.sh, não a janela.
+    (box :class "nt-lista" :orientation "v" :space-evenly false :spacing 6
+      (for g in {notif.grupos}
+        (box :orientation "v" :space-evenly false :spacing 6
+          (label :class "nt-dia" :text {g.dia} :halign "start")
+          (box :orientation "v" :space-evenly false :spacing 6
+            (for it in {g.itens}
+              (notif-item :it it))))))))
+
+
+
+;; DUAS janelas, e não uma com os dois cartões dentro. Numa janela só, o picom
+;; borrava também o vão transparente de 12px entre eles — o blur cobre o
+;; retângulo inteiro da janela, não só a parte pintada. Separadas, o vão é
+;; desktop de verdade, sem blur e sem sombra.
+;;
+;; x absoluto: a âncora "top right" do eww soma o offset em vez de subtrair.
+;; 1468 = 1920 − 12 (margem) − 440 (largura).
+(defwindow panel-cal
+  :monitor 0
+  :geometry (geometry :x "1468px" :y "62px" :width "440px" :anchor "top left")
+  :stacking "fg"
+  :windowtype "dock"
+  :exclusive false
+  (cartao-cal))
+
+;; y = 62 (topo) + 513 (altura do cartão do calendário, medida) + 12 (vão).
+;; O 513 só é estável porque o calendário mostra SEMPRE 4 eventos — ver o
+;; comentário no calendario.sh.
+(defwindow panel-notif
+  :monitor 0
+  :geometry (geometry :x "1468px" :y "587px" :width "440px" :anchor "top left")
+  :stacking "fg"
+  :windowtype "dock"
+  :exclusive false
+  (cartao-notif))

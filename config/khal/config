@@ -1,0 +1,24 @@
+# Calendário local do rice Órbita.
+# Sem sincronização: os eventos vivem em ~/.calendars/pessoal (formato vdir).
+# Criar evento:  khal new 10/08/2026 14:00 Reunião
+# Listar:        khal list
+
+[calendars]
+  [[pessoal]]
+  path = ~/.calendars/pessoal
+  type = calendar
+  color = light cyan
+
+[locale]
+  # Formatos em pt-BR: são os mesmos usados para DIGITAR em `khal new`.
+  timeformat = %H:%M
+  dateformat = %d/%m/%Y
+  longdateformat = %d/%m/%Y
+  datetimeformat = %d/%m/%Y %H:%M
+  longdatetimeformat = %d/%m/%Y %H:%M
+  # 6 = domingo, para casar com a grade do painel, que começa no domingo.
+  firstweekday = 6
+
+[default]
+  # Sem isto o `khal new` recusa: "No default calendar is configured".
+  default_calendar = pessoal

@@ -1,0 +1,72 @@
+// ═════════════════════════════════════════════════════════════════════
+//  Design tokens do handoff "Órbita" (design_handoff_orbita_bspwm/README.md).
+//  Valores finais — não improvisar cor nova sem passar por aqui.
+// ═════════════════════════════════════════════════════════════════════
+
+// ── superfícies ──────────────────────────────────────────────────────
+$bar-bg:            rgba(10, 16, 20, 0.62);
+$bar-border:        rgba(160, 214, 222, 0.14);
+$panel-bg:          rgba(9, 14, 18, 0.82);
+$panel-border:      rgba(160, 214, 222, 0.16);
+
+$surface:           rgba(255, 255, 255, 0.05);
+$surface-dim:       rgba(255, 255, 255, 0.045);
+$surface-tray:      rgba(255, 255, 255, 0.04);
+$surface-border:    rgba(255, 255, 255, 0.08);
+$divider:           rgba(255, 255, 255, 0.12);
+
+// ── acento ciano-gelo ────────────────────────────────────────────────
+$accent:            #9fd8de;
+$accent-light:      #bfeef4;
+$accent-lighter:    #dff5f8;
+$accent-open-fg:    #e2f6f8;
+
+// item ativo (dentro de painel)
+$accent-soft-bg:    rgba(159, 216, 222, 0.14);
+$accent-soft-brd:   rgba(159, 216, 222, 0.24);
+// módulo da barra com painel aberto
+$accent-open-bg:    rgba(159, 216, 222, 0.20);
+$accent-open-brd:   rgba(159, 216, 222, 0.36);
+
+// ── texto ────────────────────────────────────────────────────────────
+$fg:                #c8d6da;   // texto base da barra
+$fg-1:              #eaf7f9;
+$fg-2:              #a9bcc1;
+$fg-3:              #8fa2a8;
+$fg-rate:           #7f9298;   // ↓/↑ do chip de rede
+$fg-weak:           #6e8288;
+$fg-chevron:        #6c7f85;
+$fg-disabled:       #5c6b70;
+
+// ── semânticos ───────────────────────────────────────────────────────
+$warn:              #e6b98a;   // temperatura, disco, atenção
+$ok:                #a9dfaa;   // bateria
+$gpu:               #8fb6dd;
+
+$power-fg:          #e88b8b;
+$power-bg:          rgba(226, 120, 120, 0.14);
+$power-brd:         rgba(226, 120, 120, 0.28);
+
+// ── workspaces ───────────────────────────────────────────────────────
+$ws-active-bg:      rgba(159, 216, 222, 0.16);
+$ws-active-brd:     rgba(159, 216, 222, 0.30);
+$ws-active-fg:      $accent-light;
+$ws-occupied-bg:    rgba(255, 255, 255, 0.06);
+$ws-occupied-fg:    #9db0b6;
+$ws-empty-fg:       $fg-disabled;
+
+// ── tipografia ───────────────────────────────────────────────────────
+$mono:  "JetBrains Mono";
+$sans:  "IBM Plex Sans";
+$icons: "Material Symbols Rounded";
+
+$fs-bar:    12.5px;   // módulos da barra
+$fs-ws:     12px;     // número do workspace
+$fs-icon:   15px;     // ícone na barra
+$fs-icon16: 16px;     // ícone maior (tray, volume, bateria, power)
+$fs-chev:   14px;     // chevron
+
+// ── raios ────────────────────────────────────────────────────────────
+$r-bar:   8px;
+$r-panel: 10px;
+$r-chip:  6px;

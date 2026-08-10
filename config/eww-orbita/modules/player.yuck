@@ -1,0 +1,90 @@
+;; ── painel Player ──────────────────────────────────────────────────────
+;; top 62 · centralizado · width 560. Spec nas linhas 143–169 do protótipo.
+;; x = 680 = (1920 − 560) / 2, que também é onde fica o centro do chip de
+;; mídia da barra, medido em 959.
+
+;; Poll de 1s por causa da barra de progresso — é o único dado que anda
+;; sozinho. O :run-while garante que nada disso roda com o painel fechado.
+(defpoll player :interval "1s"
+  :initial `{"ativo":false,"tocando":false,"titulo":"nada tocando","sub":"","fonte":"","capa":"","pct":0,"pos":"0:00","dur":"0:00","shuffle_ok":false,"shuffle":false,"loop_ok":false,"loop":"None","saida":""}`
+  :run-while media_open
+  "~/.config/eww-orbita/scripts/player.sh")
+
+(defvar PLAYERCTL "playerctl")
+
+(defwidget player []
+  (box :class "panel pl-card" :space-evenly false :spacing 18
+
+    ;; Capa como background-image de um box, e não widget `image`: só assim o
+    ;; GTK aplica o raio de 8px. O widget image não recorta nos cantos.
+    (box :class "pl-capa ${player.capa == '' ? 'pl-capa-vazia' : ''}"
+         :style "background-image: url('${player.capa}');"
+         :valign "start"
+      (label :class "pl-capa-icon" :text {player.capa == "" ? ic_album : ""}
+             :halign "center" :valign "center" :hexpand true :vexpand true))
+
+    (box :orientation "v" :space-evenly false :hexpand true
+
+      (box :space-evenly false :spacing 12
+        (box :orientation "v" :space-evenly false :hexpand true
+          (label :class "pl-titulo" :text {player.titulo} :halign "start"
+                 :truncate true :limit-width 30)
+          (label :class "pl-sub" :text {player.sub} :halign "start"
+                 :truncate true :limit-width 36))
+        (label :class "pl-fonte" :text {player.fonte} :valign "start"
+               :visible {player.fonte != ""}))
+
+      ;; `vexpand` empurra o bloco de baixo para o pé do cartão, como o
+      ;; `margin-top: auto` do protótipo.
+      (box :vexpand true)
+
+      ;; A largura do preenchimento vai por `min-width` em :style, e não por
+      ;; um atributo `:width` — box do eww não tem width. 3.74 = largura útil
+      ;; da barra (560 − 36 de padding − 132 da capa − 18 de gap) dividida por
+      ;; 100.
+      (box :class "pl-barra" :orientation "h" :space-evenly false
+        (box :class "pl-preenche"
+             :style "min-width: ${round(player.pct * 3.74, 0)}px;")
+        (box :hexpand true))
+
+      (box :class "pl-tempos" :space-evenly false
+        (label :text {player.pos} :halign "start" :hexpand true)
+        (label :text {player.dur} :halign "end"))
+
+      (box :class "pl-controles" :space-evenly false :spacing 18 :valign "center"
+        ;; shuffle e repeat aparecem apagados quando o player não implementa —
+        ;; o Firefox, por exemplo, recusa os dois. Melhor apagado que mentir
+        ;; um estado que não existe.
+        (eventbox :cursor "pointer" :visible {player.shuffle_ok}
+                  :onclick "${PLAYERCTL} shuffle toggle"
+          (label :class "pl-ctl ${player.shuffle ? 'pl-ctl-on' : ''}" :text ic_shuffle))
+        (label :class "pl-ctl pl-ctl-off" :text ic_shuffle :visible {!player.shuffle_ok})
+
+        (eventbox :cursor "pointer" :onclick "${PLAYERCTL} previous"
+          (label :class "pl-ctl pl-ctl-g" :text ic_skip_previous))
+
+        (eventbox :cursor "pointer" :onclick "${PLAYERCTL} play-pause"
+          (box :class "pl-play" :valign "center"
+            (label :class "pl-play-icon" :text {player.tocando ? ic_pause : ic_play_arrow}
+                   :halign "center" :valign "center")))
+
+        (eventbox :cursor "pointer" :onclick "${PLAYERCTL} next"
+          (label :class "pl-ctl pl-ctl-g" :text ic_skip_next))
+
+        (eventbox :cursor "pointer" :visible {player.loop_ok}
+                  :onclick "${PLAYERCTL} loop ${player.loop == 'None' ? 'Playlist' : player.loop == 'Playlist' ? 'Track' : 'None'}"
+          (label :class "pl-ctl ${player.loop != 'None' ? 'pl-ctl-on' : ''}"
+                 :text {player.loop == "Track" ? ic_repeat_one_on : ic_repeat}))
+        (label :class "pl-ctl pl-ctl-off" :text ic_repeat :visible {!player.loop_ok})
+
+        (box :class "pl-saida" :space-evenly false :spacing 8 :halign "end" :hexpand true
+          (label :class "pl-saida-icon" :text ic_speaker)
+          (label :text {player.saida} :truncate true :limit-width 16))))))
+
+(defwindow panel-player
+  :monitor 0
+  :geometry (geometry :x "680px" :y "62px" :width "560px" :anchor "top left")
+  :stacking "fg"
+  :windowtype "dock"
+  :exclusive false
+  (player))

@@ -1,0 +1,14 @@
+;; ═══════════════════════════════════════════════════════════════════════
+;;  Órbita — rice bspwm
+;;  Etapa 1: barra. Os painéis (Sistema, Rede, Player, Calendário, Settings)
+;;  entram como janelas independentes numa etapa seguinte.
+;; ═══════════════════════════════════════════════════════════════════════
+
+(include "modules/icons.yuck")
+(include "modules/bar.yuck")
+(include "modules/panels.yuck")
+(include "modules/sistema.yuck")
+(include "modules/rede.yuck")
+(include "modules/settings.yuck")
+(include "modules/calendario.yuck")
+(include "modules/player.yuck")
