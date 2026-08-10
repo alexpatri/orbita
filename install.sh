@@ -23,11 +23,13 @@ liga config/dunst/dunstrc.template .config/dunst/dunstrc.template
 liga config/picom/picom.conf       .config/picom/picom.conf
 liga config/bspwm/orbita.sh        .config/bspwm/orbita.sh
 liga config/khal/config            .config/khal/config
+liga config/rofi/orbita.rasi       .config/rofi/orbita.rasi
 
 echo
 echo "Falta fazer a mao:"
 echo "  1. assets/fontes.sh                      (baixa a Material Symbols)"
 echo "  2. adicionar ao ~/.config/bspwm/bspwmrc: . \"\$HOME/.config/bspwm/orbita.sh\""
+echo "  2b. atalho no ~/.config/sxhkd/sxhkdrc — ver o README"
 echo "  3. ~/.config/dunst/scripts/colors.sh     (gera o dunstrc do template)"
 echo "  4. sudo apt install fonts-jetbrains-mono fonts-ibm-plex rofi playerctl \\"
 echo "       power-profiles-daemon rfkill khal jq"

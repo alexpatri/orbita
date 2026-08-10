@@ -16,6 +16,8 @@ não código: tudo foi recriado em `.yuck`/`.scss`, `dunstrc` e `picom.conf`.
 | **Settings** | bluetooth, VPN, modo avião, perfil de energia, não perturbe, e sliders de volume/mic/brilho |
 | **Calendário + Notificações** | grade navegável, eventos do khal e do systemd, histórico do dunst |
 | **Player** | capa, progresso, controles, saída de áudio |
+| **Toasts** | notificações do dunst, com moldura âmbar nos alertas |
+| **Launcher** | rofi drun em tela escurecida, com ícone, nome e categoria |
 
 ## Instalação
 
@@ -30,6 +32,13 @@ Depois, no `~/.config/bspwm/bspwmrc`:
 
 ```sh
 . "$HOME/.config/bspwm/orbita.sh"
+```
+
+No `~/.config/sxhkd/sxhkdrc`, para abrir o launcher:
+
+```
+super + @space
+    rofi -show drun -theme "$HOME/.config/rofi/orbita.rasi"
 ```
 
 E gere o `dunstrc`: `~/.config/dunst/scripts/colors.sh`.

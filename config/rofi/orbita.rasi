@@ -1,0 +1,129 @@
+/* ═══════════════════════════════════════════════════════════════════
+ *  Launcher do rice Órbita — §8 do handoff.
+ *  Uso: rofi -show drun -theme ~/.config/rofi/orbita.rasi
+ * ═══════════════════════════════════════════════════════════════════ */
+
+configuration {
+    modes:               "drun";
+    show-icons:          true;
+    drun-display-format: "{name}\n<span size='8500' foreground='#65787e'>{generic}</span>";
+    display-drun:        "";
+    kb-cancel:           "Escape,MousePrimary";
+}
+
+* {
+    fundo-tela:    rgba(3, 6, 9, 72%);
+    fundo-cartao:  rgba(9, 14, 18, 88%);
+    borda-cartao:  rgba(160, 214, 222, 18%);
+    linha:         rgba(255, 255, 255, 7%);
+    acento:        #9fd8de;
+    acento-suave:  rgba(159, 216, 222, 14%);
+    acento-borda:  rgba(159, 216, 222, 22%);
+    texto:         #e6f4f6;
+    texto-forte:   #eaf7f9;
+    texto-normal:  #c4d3d8;
+    texto-fraco:   #65787e;
+    texto-meta:    #5f7379;
+    meta-sel:      #7ea9af;
+
+    background-color: transparent;
+    text-color:       @texto-normal;
+}
+
+/* Tela escurecida por trás do cartão: a janela ocupa o monitor inteiro e o
+   padding posiciona o cartão — 600 = (1920−720)/2 nas laterais, 190 no topo.
+
+   A altura do cartão vem do `expand: false` no LISTVIEW, e não do padding de
+   baixo nem do mainbox. Sem ele o rofi reserva altura para `lines` elementos
+   mas só desenha metade, porque cada entrada aqui tem duas linhas de texto
+   (nome + categoria) — sobravam ~300px de cartão vazio abaixo do rodapé. */
+window {
+    fullscreen:       true;
+    background-color: @fundo-tela;
+    padding:          190px 600px 0px 600px;
+    children:         [ mainbox ];
+}
+
+mainbox {
+    expand:           false;
+    background-color: @fundo-cartao;
+    border:           1px;
+    border-color:     @borda-cartao;
+    border-radius:    10px;
+    children:         [ inputbar, listview, textbox-atalhos ];
+}
+
+/* ── campo de busca ─────────────────────────────────────────────── */
+inputbar {
+    padding:      20px 22px;
+    spacing:      12px;
+    border:       0px 0px 1px 0px;
+    border-color: @linha;
+    children:     [ prompt, entry, num-filtered-rows, textbox-de, num-rows ];
+}
+prompt {
+    font:       "Material Symbols Rounded 16";
+    text-color: @acento;
+}
+entry {
+    font:              "JetBrains Mono 14";
+    text-color:        @texto;
+    cursor-width:      9px;
+    placeholder:       "";
+    vertical-align:    0.5;
+}
+num-filtered-rows, num-rows, textbox-de {
+    font:           "JetBrains Mono 9";
+    text-color:     @texto-meta;
+    vertical-align: 0.5;
+    expand:         false;
+}
+textbox-de { str: " de "; }
+
+/* ── lista ──────────────────────────────────────────────────────── */
+listview {
+    /* Ver o comentário em `window`: é este expand que faz o cartão ter a
+       altura do conteúdo. `lines` conta ELEMENTOS aqui, mas só porque o
+       expand está desligado. */
+    expand:       false;
+    padding:      8px;
+    lines:        6;
+    scrollbar:    false;
+    fixed-height: false;
+}
+element {
+    padding:       13px 16px;
+    spacing:       14px;
+    border-radius: 8px;
+    border:        1px;
+    border-color:  transparent;      /* sempre presente, para não saltar 2px */
+    children:      [ element-icon, element-text ];
+}
+element normal.normal { text-color: @texto-normal; }
+element selected.normal {
+    background-color: @acento-suave;
+    border-color:     @acento-borda;
+    text-color:       @texto-forte;
+}
+element-icon {
+    size:           22px;
+    vertical-align: 0.5;
+}
+element-text {
+    font:           "IBM Plex Sans 11";
+    vertical-align: 0.5;
+    markup:         true;
+}
+
+/* ── rodapé de atalhos ──────────────────────────────────────────────
+   Texto fixo no tema, e não via `-mesg`: os atalhos não mudam, então são
+   conteúdo do launcher e não uma mensagem passada por quem o invoca. */
+textbox-atalhos {
+    padding:          12px 22px;
+    background-color: rgba(255, 255, 255, 3%);
+    border:           1px 0px 0px 0px;
+    border-color:     rgba(255, 255, 255, 6%);
+    font:             "JetBrains Mono 9";
+    text-color:       @texto-meta;
+    str:              "↑↓ navegar      tab modos      enter abrir      esc fechar";
+}
