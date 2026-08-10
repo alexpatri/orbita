@@ -10,7 +10,10 @@
 # Vem daqui, e não do bspwmrc, porque é aparência do rice. Este arquivo é
 # carregado depois, então sobrescreve o que estiver lá.
 bspc config border_width          1
-bspc config focused_border_color  "#9fd8de"
+# #253338 e a borda da barra ja composta: no eww ela e rgba(160,214,222,.14),
+# mas borda de janela no bspwm nao aceita alfa, entao vai o valor medido na
+# tela. O acento cheio (#9fd8de) ficava chamativo demais para moldura.
+bspc config focused_border_color  "#253338"
 bspc config normal_border_color   "#1b2126"
 
 # ── Barra: eww "Órbita" (substituiu a polybar) ────────────────────────
