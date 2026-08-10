@@ -6,6 +6,13 @@
 # caminho do wallpaper) que não faz sentido versionar no repo do rice.
 # O bspwmrc apenas carrega este arquivo.
 
+# ── Bordas de janela ──────────────────────────────────────────────────
+# Vem daqui, e não do bspwmrc, porque é aparência do rice. Este arquivo é
+# carregado depois, então sobrescreve o que estiver lá.
+bspc config border_width          1
+bspc config focused_border_color  "#9fd8de"
+bspc config normal_border_color   "#1b2126"
+
 # ── Barra: eww "Órbita" (substituiu a polybar) ────────────────────────
 # top_padding 54 e NAO 68 como diz o handoff: o bspwm SOMA o window_gap ao
 # top_padding, entao o 68 do README (14+42+12) rendia um vao de 24px em vez
