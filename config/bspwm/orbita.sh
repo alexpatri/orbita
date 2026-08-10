@@ -9,7 +9,10 @@
 # ── Bordas de janela ──────────────────────────────────────────────────
 # Vem daqui, e não do bspwmrc, porque é aparência do rice. Este arquivo é
 # carregado depois, então sobrescreve o que estiver lá.
-bspc config border_width          1
+# 2px, e nao o 1 do handoff: com a borda na cor discreta da barra, 1px
+# praticamente sumia. A borda e desenhada DENTRO do window_gap, entao mudar a
+# grossura nao desloca as janelas.
+bspc config border_width          2
 # #253338 e a borda da barra ja composta: no eww ela e rgba(160,214,222,.14),
 # mas borda de janela no bspwm nao aceita alfa, entao vai o valor medido na
 # tela. O acento cheio (#9fd8de) ficava chamativo demais para moldura.
