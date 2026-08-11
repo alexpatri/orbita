@@ -24,6 +24,9 @@ liga config/picom/picom.conf       .config/picom/picom.conf
 liga config/bspwm/orbita.sh        .config/bspwm/orbita.sh
 liga config/khal/config            .config/khal/config
 liga config/rofi/orbita.rasi       .config/rofi/orbita.rasi
+liga config/gtk-3.0/settings.ini   .config/gtk-3.0/settings.ini
+liga config/gtk-4.0/settings.ini   .config/gtk-4.0/settings.ini
+liga config/gtkrc-2.0              .gtkrc-2.0
 
 echo
 echo "Falta fazer a mao:"

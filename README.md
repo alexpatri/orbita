@@ -43,6 +43,9 @@ super + @space
 
 E gere o `dunstrc`: `~/.config/dunst/scripts/colors.sh`.
 
+O tema GTK escuro entra junto pelo `install.sh`. Aplicativos já abertos só
+mudam depois de reiniciados.
+
 ## Como está organizado
 
 ```
